@@ -1,0 +1,6 @@
+# Excel Lock-Dateien
+~$*.xlsx
+~$*.xls
+
+# macOS
+.DS_Store

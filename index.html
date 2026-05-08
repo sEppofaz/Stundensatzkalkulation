@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stundensatzkalkulation</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f4f8; color: #1a202c; font-size: 14px; }
+
+/* Header */
+.app-header { background: linear-gradient(135deg, #1e40af, #1d4ed8); color: white; padding: 14px 24px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+.app-header h1 { font-size: 1.2rem; font-weight: 700; letter-spacing: 0.02em; }
+.app-header .subtitle { font-size: 0.78rem; opacity: 0.75; margin-top: 2px; }
+
+/* Tabs */
+.tab-bar { background: #1e3a8a; display: flex; padding: 0 16px; gap: 2px; overflow-x: auto; }
+.tab-btn { padding: 10px 16px; border: none; background: transparent; color: rgba(255,255,255,0.65); cursor: pointer; font-size: 0.82rem; font-weight: 500; border-bottom: 3px solid transparent; transition: all 0.15s; white-space: nowrap; letter-spacing: 0.01em; }
+.tab-btn:hover { color: white; background: rgba(255,255,255,0.08); }
+.tab-btn.active { color: white; border-bottom-color: #60a5fa; background: rgba(255,255,255,0.12); font-weight: 600; }
+.tab-btn.info-btn { margin-left: auto; color: rgba(255,255,255,0.5); }
+.tab-btn.info-btn.active { color: white; }
+
+/* Layout */
+.tab-content { display: none; padding: 20px; max-width: 1000px; margin: 0 auto; }
+.tab-content.active { display: block; }
+
+/* Cards */
+.card { background: white; border-radius: 10px; padding: 18px 22px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; }
+.card-title { font-size: 0.88rem; font-weight: 700; color: #1e40af; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 2px solid #dbeafe; text-transform: uppercase; letter-spacing: 0.04em; }
+
+/* Form fields */
+.field-row { display: grid; grid-template-columns: 220px 1fr; gap: 10px; align-items: center; margin-bottom: 9px; }
+.field-row label { font-size: 0.84rem; color: #4a5568; font-weight: 500; line-height: 1.3; }
+.hint { font-size: 0.73rem; color: #9ca3af; margin-top: 2px; font-weight: 400; }
+
+input[type="number"], input[type="text"], input[type="date"], select {
+  width: 100%; padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px;
+  font-size: 0.88rem; background: white; color: #1a202c; transition: border-color 0.15s, box-shadow 0.15s;
+}
+input:focus, select:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
+
+/* Input types */
+.inp-yellow { background: #fffde7 !important; border-color: #fbbf24 !important; }
+.inp-yellow:focus { border-color: #d97706 !important; box-shadow: 0 0 0 3px rgba(251,191,36,0.2) !important; }
+
+/* Output fields */
+.out-field { background: #f0fdf4; border: 1px solid #86efac; border-radius: 6px; padding: 6px 10px; font-size: 0.88rem; font-weight: 600; color: #166534; min-height: 32px; display: flex; align-items: center; }
+.out-big { background: #dcfce7; border: 2px solid #4ade80; border-radius: 8px; padding: 10px 14px; font-size: 1.05rem; font-weight: 800; color: #14532d; min-height: 40px; display: flex; align-items: center; }
+.out-gray { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 10px; font-size: 0.88rem; color: #64748b; min-height: 32px; display: flex; align-items: center; }
+
+/* Two-col grid */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+/* Dividers */
+hr { border: none; border-top: 1px solid #e5e7eb; margin: 12px 0; }
+
+/* Info boxes */
+.info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+.info-tile { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px 14px; text-align: center; }
+.info-tile .tile-label { font-size: 0.75rem; color: #3730a3; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.info-tile .tile-value { font-size: 1.3rem; font-weight: 800; color: #1e40af; margin-top: 4px; }
+.info-tile .tile-sub { font-size: 0.72rem; color: #6b7280; margin-top: 2px; }
+
+/* Tables */
+.wp-table { width: 100%; border-collapse: collapse; font-size: 0.81rem; }
+.wp-table th { background: #eff6ff; padding: 7px 8px; border: 1px solid #dbeafe; font-weight: 600; color: #1e3a8a; text-align: center; white-space: nowrap; }
+.wp-table th.th-left { text-align: left; }
+.wp-table td { padding: 5px 7px; border: 1px solid #e5e7eb; text-align: center; vertical-align: middle; }
+.wp-table td.td-label { text-align: left; font-weight: 500; color: #374151; background: #f9fafb; white-space: nowrap; padding-right: 12px; }
+.wp-table td.td-result { background: #f0fdf4; color: #166534; font-weight: 600; }
+.wp-table td.td-total { background: #dbeafe; color: #1e3a8a; font-weight: 700; }
+.wp-table td.td-infl { background: #fef9c3; color: #713f12; font-weight: 500; }
+.wp-table td.td-big { background: #dcfce7; color: #14532d; font-weight: 800; }
+.wp-table input[type="number"] { width: 64px; padding: 4px 5px; font-size: 0.80rem; border-radius: 4px; text-align: center; background: #fffde7; border-color: #fbbf24; }
+.wp-table input[type="date"] { width: 130px; padding: 4px 6px; font-size: 0.80rem; border-radius: 4px; }
+.wp-table input[type="number"].bid-input { width: 100px; background: #fffde7; border-color: #fbbf24; }
+
+/* Scrollable */
+.scroll-x { overflow-x: auto; }
+
+/* Info page */
+.info-section { margin-bottom: 20px; }
+.info-section h3 { font-size: 0.92rem; font-weight: 700; color: #1e40af; margin-bottom: 10px; }
+.info-table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
+.info-table th { background: #eff6ff; padding: 8px 12px; text-align: left; border: 1px solid #dbeafe; font-weight: 600; color: #1e3a8a; }
+.info-table td { padding: 8px 12px; border: 1px solid #e5e7eb; vertical-align: top; line-height: 1.5; }
+.info-table tr:nth-child(even) td { background: #f8fafc; }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+.badge-yellow { background: #fffde7; border: 1px solid #fbbf24; color: #92400e; }
+.badge-green  { background: #dcfce7; border: 1px solid #4ade80; color: #14532d; }
+.badge-gray   { background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; }
+.formula-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; font-family: 'Courier New', monospace; font-size: 0.82rem; color: #374151; margin: 6px 0; line-height: 1.6; }
+.reset-btn { background: #fee2e2; border: 1px solid #fca5a5; color: #7f1d1d; padding: 9px 18px; border-radius: 7px; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: background 0.15s; }
+.reset-btn:hover { background: #fecaca; }
+.save-hint { font-size: 0.78rem; color: #6b7280; display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+.save-dot { width: 8px; height: 8px; border-radius: 50%; background: #4ade80; display: inline-block; }
+
+@media (max-width: 680px) {
+  .field-row { grid-template-columns: 1fr; gap: 3px; }
+  .two-col { grid-template-columns: 1fr; }
+  .tab-content { padding: 12px; }
+  .card { padding: 14px 16px; }
+}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div>
+    <h1>Stundensatzkalkulation</h1>
+    <div class="subtitle">a sEpp-App</div>
+  </div>
+</div>
+
+<div class="tab-bar">
+  <button class="tab-btn active"  onclick="showTab('hrs-calc', this)">hrs calc</button>
+  <button class="tab-btn"         onclick="showTab('salary-billrate', this)">Salary → Bill Rate</button>
+  <button class="tab-btn"         onclick="showTab('salary-cm', this)">Salary → CM%</button>
+  <button class="tab-btn"         onclick="showTab('billrate-salary', this)">Bill Rate → Salary</button>
+  <button class="tab-btn"         onclick="showTab('work-package', this)">Work Package</button>
+  <button class="tab-btn info-btn" onclick="showTab('info-page', this)">ℹ️ Info</button>
+</div>
+
+<!-- ==============================
+     TAB 1: hrs calc
+     ============================== -->
+<div id="hrs-calc" class="tab-content active">
+  <div class="card">
+    <div class="card-title">Arbeitsstunden-Kalkulation</div>
+    <div class="field-row">
+      <label>Kalendertage / Jahr</label>
+      <div class="out-gray">365</div>
+    </div>
+    <div class="field-row">
+      <label>Wochenendtage (52 × 2)</label>
+      <div class="out-gray">104</div>
+    </div>
+    <div class="field-row">
+      <label>Arbeitstage / Jahr</label>
+      <div class="out-field">261</div>
+    </div>
+    <hr>
+    <div class="field-row">
+      <label>
+        AR% (Auslastungsrate)
+        <div class="hint">Ø der letzten 5 Jahre: nur ~76%!</div>
+      </label>
+      <div style="display:flex;align-items:center;gap:8px">
+        <input type="number" class="inp-yellow" id="hc-ar" value="77" min="0" max="100" step="1" oninput="calcHrs()" style="max-width:100px">
+        <span style="color:#6b7280;font-size:0.82rem">%</span>
+      </div>
+    </div>
+    <div class="field-row">
+      <label>
+        Stunden / Tag (hrs)
+        <div class="hint">8 h bei 40h-Woche · 7 h bei 35h-Woche</div>
+      </label>
+      <div style="display:flex;align-items:center;gap:8px">
+        <input type="number" class="inp-yellow" id="hc-hrs" value="8" min="1" max="24" step="0.5" oninput="calcHrs()" style="max-width:100px">
+        <span style="color:#6b7280;font-size:0.82rem">h</span>
+      </div>
+    </div>
+    <hr>
+    <div class="field-row">
+      <label style="font-weight:700;color:#1a202c">Arbeitsstunden / Jahr</label>
+      <div class="out-big" id="hc-result">–</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Referenzwerte (Wochenstunden)</div>
+    <div class="info-grid">
+      <div class="info-tile">
+        <div class="tile-label">35h-Woche</div>
+        <div class="tile-value">1.407 h</div>
+        <div class="tile-sub">pro Jahr</div>
+      </div>
+      <div class="info-tile">
+        <div class="tile-label">40h-Woche</div>
+        <div class="tile-value">1.608 h</div>
+        <div class="tile-sub">pro Jahr</div>
+      </div>
+      <div class="info-tile" style="background:#f0fdf4;border-color:#86efac">
+        <div class="tile-label" style="color:#166534">Aktuell (AR%)</div>
+        <div class="tile-value" style="color:#14532d" id="hc-custom-val">–</div>
+        <div class="tile-sub">pro Jahr</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==============================
+     TAB 2: Salary → Bill Rate
+     ============================== -->
+<div id="salary-billrate" class="tab-content">
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Eingaben</div>
+      <div class="field-row">
+        <label>Projekt / Position</label>
+        <input type="text" id="sbr-projekt" placeholder="z.B. Test Management (AP 1)">
+      </div>
+      <div class="field-row">
+        <label>Profil / Erfahrung</label>
+        <input type="text" id="sbr-profil" placeholder="z.B. Munich, 3–4 Jahre, engl.">
+      </div>
+      <hr>
+      <div class="field-row">
+        <label>Jahresgehalt (€)</label>
+        <input type="number" class="inp-yellow" id="sbr-salary" value="75000" min="0" oninput="calcSBR()">
+      </div>
+      <div class="field-row">
+        <label>
+          Non-wage labor costs
+          <div class="hint">Lohnnebenkosten (AG-Anteil)</div>
+        </label>
+        <div style="display:flex;align-items:center;gap:6px">
+          <input type="number" class="inp-yellow" id="sbr-nwl" value="21.5" min="0" max="100" step="0.1" oninput="calcSBR()" style="max-width:90px">
+          <span style="color:#6b7280;font-size:0.82rem">%</span>
+        </div>
+      </div>
+      <div class="field-row">
+        <label>
+          Overhead
+          <div class="hint">Meetings, Verwaltung etc.</div>
+        </label>
+        <div style="display:flex;align-items:center;gap:6px">
+          <input type="number" class="inp-yellow" id="sbr-overhead" value="0" min="0" max="100" step="0.1" oninput="calcSBR()" style="max-width:90px">
+          <span style="color:#6b7280;font-size:0.82rem">%</span>
+        </div>
+      </div>
+      <div class="field-row">
+        <label>CM% (Deckungsbeitrag)</label>
+        <div style="display:flex;align-items:center;gap:6px">
+          <input type="number" class="inp-yellow" id="sbr-cm" value="25" min="0" max="100" step="0.1" oninput="calcSBR()" style="max-width:90px">
+          <span style="color:#6b7280;font-size:0.82rem">%</span>
+        </div>
+      </div>
+      <div class="field-row">
+        <label>
+          Arbeitsstunden / Jahr
+          <div class="hint">1.407 @35h · 1.608 @40h</div>
+        </label>
+        <input type="number" id="sbr-hours" value="1608" min="1" oninput="calcSBR()" style="max-width:100px">
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-title">Berechnungsweg</div>
+        <div class="field-row">
+          <label>Gehalt</label>
+          <div class="out-gray" id="sbr-s0">–</div>
+        </div>
+        <div class="field-row">
+          <label>× (1 + NWL%)</label>
+          <div class="out-field" id="sbr-s1">–</div>
+        </div>
+        <div class="field-row">
+          <label>× (1 + Overhead%)</label>
+          <div class="out-field" id="sbr-s2">–</div>
+        </div>
+        <div class="field-row">
+          <label>÷ (1 − CM%)</label>
+          <div class="out-field" id="sbr-s3">–</div>
+        </div>
+        <div class="field-row">
+          <label>÷ Stunden/Jahr</label>
+          <div class="out-big" id="sbr-result">–</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Angebot & Verhandlung</div>
+        <div class="field-row">
+          <label>Angebot an Kunde (€/h)</label>
+          <input type="number" id="sbr-offer" placeholder="z.B. 80.00" step="0.01">
+        </div>
+        <div class="field-row">
+          <label>Datum Angebot</label>
+          <input type="date" id="sbr-offer-date">
+        </div>
+        <hr>
+        <div class="field-row">
+          <label>Verhandelt & zugestimmt (€/h)</label>
+          <input type="number" id="sbr-agreed" placeholder="z.B. 78.00" step="0.01">
+        </div>
+        <div class="field-row">
+          <label>Datum verhandelt</label>
+          <input type="date" id="sbr-agreed-date">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==============================
+     TAB 3: Salary → CM%
+     ============================== -->
+<div id="salary-cm" class="tab-content">
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Eingaben</div>
+      <div class="field-row">
+        <label>Name, Vorname</label>
+        <input type="text" id="scm-name" placeholder="Name eingeben">
+      </div>
+      <hr>
+      <div class="field-row">
+        <label>
+          Jahresgehalt (€)
+          <div class="hint">oder Monatsgehalt × 12</div>
+        </label>
+        <input type="number" class="inp-yellow" id="scm-salary" value="46392" min="0" oninput="calcSCM()">
+      </div>
+      <div class="field-row">
+        <label>
+          Non-wage labor costs
+          <div class="hint">Lohnnebenkosten</div>
+        </label>
+        <div style="display:flex;align-items:center;gap:6px">
+          <input type="number" id="scm-nwl" value="21.5" min="0" max="100" step="0.1" oninput="calcSCM()" style="max-width:90px">
+          <span style="color:#6b7280;font-size:0.82rem">%</span>
+        </div>
+      </div>
+      <div class="field-row">
+        <label>Overhead</label>
+        <div style="display:flex;align-items:center;gap:6px">
+          <input type="number" class="inp-yellow" id="scm-overhead" value="0" min="0" max="100" step="0.1" oninput="calcSCM()" style="max-width:90px">
+          <span style="color:#6b7280;font-size:0.82rem">%</span>
+        </div>
+      </div>
+      <div class="field-row">
+        <label>
+          Arbeitsstunden / Jahr
+          <div class="hint">1.407 @35h · 1.608 @40h</div>
+        </label>
+        <input type="number" id="scm-hours" value="1407" min="1" oninput="calcSCM()" style="max-width:100px">
+      </div>
+      <div class="field-row">
+        <label>Bill Rate beim Kunden (€/h)</label>
+        <input type="number" class="inp-yellow" id="scm-billrate" value="45.83" min="0" step="0.01" oninput="calcSCM()">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Berechnungsweg</div>
+      <div class="field-row">
+        <label>Gehalt + NWL (€/Jahr)</label>
+        <div class="out-field" id="scm-s1">–</div>
+      </div>
+      <div class="field-row">
+        <label>× (1 + Overhead%) (€/Jahr)</label>
+        <div class="out-field" id="scm-s2">–</div>
+      </div>
+      <div class="field-row">
+        <label>÷ Stunden = Kostenrate (€/h)</label>
+        <div class="out-field" id="scm-costrate">–</div>
+      </div>
+      <hr>
+      <div style="background:#eff6ff;border-radius:6px;padding:10px 12px;margin-bottom:10px;font-size:0.78rem;color:#1e3a8a">
+        CM% = 1 − (Kostenrate ÷ Bill Rate)
+      </div>
+      <div class="field-row">
+        <label style="font-weight:700;color:#1a202c">CM%</label>
+        <div class="out-big" id="scm-result">–</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==============================
+     TAB 4: Bill Rate → Salary
+     ============================== -->
+<div id="billrate-salary" class="tab-content">
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Eingaben</div>
+      <div class="field-row">
+        <label>Währung</label>
+        <select id="brs-currency" class="inp-yellow" onchange="calcBRS()">
+          <option value="EUR">EUR €</option>
+          <option value="USD">USD $</option>
+        </select>
+      </div>
+      <div class="field-row">
+        <label>Bill Rate (€/h)</label>
+        <input type="number" class="inp-yellow" id="brs-rate-eur" value="50" min="0" step="0.01" oninput="calcBRS()">
+      </div>
+      <div class="field-row">
+        <label>Bill Rate ($/h)</label>
+        <input type="number" class="inp-yellow" id="brs-rate-usd" value="48.06" min="0" step="0.01" oninput="calcBRS()">
+      </div>
+      <hr>
+      <div class="field-row">
+        <label>
+          Non-wage labor costs
+          <div class="hint">Lohnnebenkosten</div>
+        </label>
+        <div style="display:flex;align-items:center;gap:6px">
+          <input type="number" id="brs-nwl" value="21.5" min="0" max="100" step="0.1" oninput="calcBRS()" style="max-width:90px">
+          <span style="color:#6b7280;font-size:0.82rem">%</span>
+        </div>
+      </div>
+      <div class="field-row">
+        <label>CM% min</label>
+        <div style="display:flex;align-items:center;gap:6px">
+          <input type="number" class="inp-yellow" id="brs-cm-min" value="25" min="0" max="100" step="0.1" oninput="calcBRS()" style="max-width:90px">
+          <span style="color:#6b7280;font-size:0.82rem">%</span>
+        </div>
+      </div>
+      <div class="field-row">
+        <label>CM% max</label>
+        <div style="display:flex;align-items:center;gap:6px">
+          <input type="number" class="inp-yellow" id="brs-cm-max" value="30" min="0" max="100" step="0.1" oninput="calcBRS()" style="max-width:90px">
+          <span style="color:#6b7280;font-size:0.82rem">%</span>
+        </div>
+      </div>
+      <div class="field-row">
+        <label>
+          Arbeitsstunden / Jahr
+          <div class="hint">1.407 @35h · 1.608 @40h</div>
+        </label>
+        <input type="number" id="brs-hours" value="1608" min="1" oninput="calcBRS()" style="max-width:100px">
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-title" style="color:#dc2626">Minimum-Gehalt (CM% max)</div>
+        <div style="font-size:0.78rem;color:#6b7280;margin-bottom:12px">
+          Bill Rate × (1 − CM%<sub>max</sub>) ÷ (1 + NWL%) × Stunden
+        </div>
+        <div class="field-row">
+          <label>Jahresgehalt min</label>
+          <div class="out-field" id="brs-year-min">–</div>
+        </div>
+        <div class="field-row">
+          <label style="font-weight:700">Monatsgehalt min</label>
+          <div class="out-big" id="brs-month-min" style="background:#fee2e2;border-color:#fca5a5;color:#7f1d1d">–</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title" style="color:#166534">Maximum-Gehalt (CM% min)</div>
+        <div style="font-size:0.78rem;color:#6b7280;margin-bottom:12px">
+          Bill Rate × (1 − CM%<sub>min</sub>) ÷ (1 + NWL%) × Stunden
+        </div>
+        <div class="field-row">
+          <label>Jahresgehalt max</label>
+          <div class="out-field" id="brs-year-max">–</div>
+        </div>
+        <div class="field-row">
+          <label style="font-weight:700">Monatsgehalt max</label>
+          <div class="out-big" id="brs-month-max">–</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==============================
+     TAB 5: Work Package
+     ============================== -->
+<div id="work-package" class="tab-content">
+  <div class="card">
+    <div class="card-title">Globale Parameter</div>
+    <div class="two-col">
+      <div>
+        <div class="field-row">
+          <label>Non-wage labor costs (%)</label>
+          <div style="display:flex;align-items:center;gap:6px">
+            <input type="number" id="wp-nwl" value="21.5" min="0" max="100" step="0.1" oninput="calcWP()" style="max-width:90px">
+            <span style="color:#6b7280;font-size:0.82rem">%</span>
+          </div>
+        </div>
+        <div class="field-row">
+          <label>Overhead (%)</label>
+          <div style="display:flex;align-items:center;gap:6px">
+            <input type="number" class="inp-yellow" id="wp-overhead" value="6" min="0" max="100" step="0.1" oninput="calcWP()" style="max-width:90px">
+            <span style="color:#6b7280;font-size:0.82rem">%</span>
+          </div>
+        </div>
+        <div class="field-row">
+          <label>CM%</label>
+          <div style="display:flex;align-items:center;gap:6px">
+            <input type="number" class="inp-yellow" id="wp-cm" value="25" min="0" max="100" step="0.1" oninput="calcWP()" style="max-width:90px">
+            <span style="color:#6b7280;font-size:0.82rem">%</span>
+          </div>
+        </div>
+        <div class="field-row">
+          <label>
+            Arbeitsstunden / Jahr
+            <div class="hint">1.407 @35h · 1.608 @40h</div>
+          </label>
+          <input type="number" id="wp-hours" value="1608" min="1" oninput="calcWP()" style="max-width:100px">
+        </div>
+      </div>
+      <div>
+        <div class="field-row">
+          <label>Gesamtstunden Projekt</label>
+          <input type="number" class="inp-yellow" id="wp-total-hours" value="100000" min="0" oninput="calcWP()">
+        </div>
+        <div class="field-row">
+          <label>Inflation p.a. (%)</label>
+          <div style="display:flex;align-items:center;gap:6px">
+            <input type="number" class="inp-yellow" id="wp-inflation" value="2.5" min="0" max="100" step="0.1" oninput="calcWP()" style="max-width:90px">
+            <span style="color:#6b7280;font-size:0.82rem">%</span>
+          </div>
+        </div>
+        <div class="field-row">
+          <label>Laufzeit (Jahre)</label>
+          <input type="number" class="inp-yellow" id="wp-runtime" value="8" min="1" max="20" step="1" oninput="rebuildWP()" style="max-width:90px">
+        </div>
+        <div class="field-row">
+          <label>Startjahr</label>
+          <input type="number" class="inp-yellow" id="wp-startyear" value="2023" min="2000" max="2050" oninput="rebuildWP()" style="max-width:100px">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Rollengehälter & Stundensätze</div>
+    <div class="scroll-x">
+      <table class="wp-table">
+        <thead>
+          <tr>
+            <th class="th-left">Rolle</th>
+            <th>Jahresgehalt (€)</th>
+            <th>+ NWL → (€)</th>
+            <th>+ Overhead → (€)</th>
+            <th>÷ (1−CM%) = Vollkosten (€)</th>
+            <th>÷ Stunden = Rate (€/h)</th>
+          </tr>
+        </thead>
+        <tbody id="wp-roles-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">FTE-Plan & Stundensatz-Entwicklung</div>
+    <div class="scroll-x">
+      <table class="wp-table" id="wp-fte-table"></table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Angebotswert</div>
+    <div class="two-col">
+      <div class="field-row">
+        <label style="font-weight:600">Mixed Hourly Rate (Ø aller Jahre)</label>
+        <div class="out-big" id="wp-mixed-rate">–</div>
+      </div>
+      <div class="field-row">
+        <label style="font-weight:600">Angebotswert gesamt</label>
+        <div class="out-big" id="wp-offer-value">–</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Angebotsrunden</div>
+    <div class="scroll-x">
+      <table class="wp-table" id="wp-rounds-table"></table>
+    </div>
+  </div>
+</div>
+
+<!-- ==============================
+     TAB 6: Info
+     ============================== -->
+<div id="info-page" class="tab-content">
+  <div class="card">
+    <div class="card-title">Über diese App</div>
+    <p style="font-size:0.88rem;color:#4a5568;line-height:1.7;margin-bottom:12px">
+      Die <strong>Stundensatzkalkulation</strong> unterstützt bei der Berechnung von Stundensätzen, Deckungsbeiträgen und Gehaltskorridoren im Projektgeschäft. Alle Berechnungen laufen lokal im Browser – keine Daten verlassen dein Gerät.
+    </p>
+    <div class="save-hint">
+      <span class="save-dot"></span>
+      Alle Eingaben werden automatisch im Browser gespeichert (localStorage) und beim nächsten Öffnen wiederhergestellt.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Farbcodierung</div>
+    <table class="info-table">
+      <thead><tr><th>Farbe</th><th>Bedeutung</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="badge badge-yellow">Gelb</span></td>
+          <td>Eingabefeld – kann bearbeitet werden. Wert wird gespeichert.</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-green">Grün</span></td>
+          <td>Berechnetes Ergebnis – wird automatisch aktualisiert. Kein direkter Eingabewert.</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-gray">Grau</span></td>
+          <td>Fixer Referenzwert – nicht editierbar (z.B. 365 Tage/Jahr).</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Reiter-Übersicht</div>
+    <table class="info-table">
+      <thead><tr><th style="width:160px">Reiter</th><th>Funktion</th><th>Kernergebnis</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>hrs calc</strong></td>
+          <td>Berechnet die tatsächlichen Arbeitsstunden pro Jahr auf Basis von Auslastungsrate (AR%) und Stunden pro Tag.</td>
+          <td>Arbeitsstunden / Jahr</td>
+        </tr>
+        <tr>
+          <td><strong>Salary → Bill Rate</strong></td>
+          <td>Ausgehend vom Jahresgehalt wird der notwendige Stundensatz (Bill Rate) beim Kunden berechnet, um NWL, Overhead und Deckungsbeitrag zu decken.</td>
+          <td>Stundensatz (€/h)</td>
+        </tr>
+        <tr>
+          <td><strong>Salary → CM%</strong></td>
+          <td>Berechnet den Deckungsbeitrag (CM%) für eine Person, wenn Gehalt und tatsächliche Bill Rate bekannt sind.</td>
+          <td>CM%</td>
+        </tr>
+        <tr>
+          <td><strong>Bill Rate → Salary</strong></td>
+          <td>Rückrechnung: Welches Gehalt (min/max) ist bei einer gegebenen Bill Rate und einem CM%-Band möglich? Unterstützt EUR und USD.</td>
+          <td>Jahres- & Monatsgehalt min/max</td>
+        </tr>
+        <tr>
+          <td><strong>Work Package</strong></td>
+          <td>Kalkulation für Multi-Rollen-Projekte über mehrere Jahre. Definiert FTE-Plan (Vollzeitkräfte pro Rolle und Jahr), berücksichtigt Inflation, berechnet Mixed Hourly Rate und Angebotswert. Bis zu 4 Angebotsrunden mit Rabattanzeige.</td>
+          <td>Mixed Rate · Angebotswert · Rabatt</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Erklärung der Kennzahlen</div>
+    <table class="info-table">
+      <thead><tr><th style="width:180px">Begriff</th><th>Erklärung</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>AR% (Auslastungsrate)</strong></td>
+          <td>Anteil der Arbeitstage, an denen eine Person tatsächlich abrechenbar beim Kunden tätig ist. Historischer Durchschnitt: ~76 %. Fehlzeiten, interne Meetings, Bench-Zeit etc. reduzieren die Rate.</td>
+        </tr>
+        <tr>
+          <td><strong>NWL (Non-wage labor costs)</strong></td>
+          <td>Lohnnebenkosten des Arbeitgebers (Sozialversicherungsanteile, Berufsgenossenschaft etc.). Typisch in Deutschland: ~21,5 % des Bruttogehalts.</td>
+        </tr>
+        <tr>
+          <td><strong>Overhead</strong></td>
+          <td>Anteilige Gemeinkosten, die auf den Mitarbeiter umgelegt werden (z.B. Meetings, Verwaltung, Lizenzen). Variiert je nach Unternehmensstruktur; im einfachen Modell = 0 %.</td>
+        </tr>
+        <tr>
+          <td><strong>CM% (Contribution Margin)</strong></td>
+          <td>Deckungsbeitrag – der Anteil des Umsatzes, der nach Abzug der direkten Personalkosten (inkl. NWL und Overhead) verbleibt. Typisches Ziel: 25–30 %.</td>
+        </tr>
+        <tr>
+          <td><strong>Bill Rate</strong></td>
+          <td>Der dem Kunden in Rechnung gestellte Stundensatz (€/h oder $/h).</td>
+        </tr>
+        <tr>
+          <td><strong>Mixed Hourly Rate</strong></td>
+          <td>Durchschnittlicher Stundensatz über alle Rollen und alle Projektjahre (inkl. Inflation). Basis für den Angebotswert.</td>
+        </tr>
+        <tr>
+          <td><strong>FTE</strong></td>
+          <td>Full-Time Equivalent – Anzahl der Vollzeitstellen pro Rolle und Jahr.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Berechnungsformeln</div>
+    <div class="info-section">
+      <h3>Salary → Bill Rate</h3>
+      <div class="formula-box">
+        Vollkosten = Gehalt × (1 + NWL%) × (1 + Overhead%) ÷ (1 − CM%)<br>
+        Bill Rate  = ROUND(Vollkosten ÷ Stunden/Jahr, 2)
+      </div>
+    </div>
+    <div class="info-section">
+      <h3>Salary → CM%</h3>
+      <div class="formula-box">
+        Kostenrate = ROUND(Gehalt × (1 + NWL%) × (1 + Overhead%) ÷ Stunden, 2)<br>
+        CM%        = 1 − (Kostenrate ÷ Bill Rate)
+      </div>
+    </div>
+    <div class="info-section">
+      <h3>Bill Rate → Salary</h3>
+      <div class="formula-box">
+        Jahresgehalt min = Bill Rate × (1 − CM%_max) ÷ (1 + NWL%) × Stunden<br>
+        Jahresgehalt max = Bill Rate × (1 − CM%_min) ÷ (1 + NWL%) × Stunden<br>
+        Monatsgehalt     = Jahresgehalt ÷ 12
+      </div>
+    </div>
+    <div class="info-section">
+      <h3>Work Package – Stundensatz pro Rolle</h3>
+      <div class="formula-box">
+        Rate = ROUND(Gehalt × (1 + NWL%) × (1 + Overhead%) ÷ (1 − CM%) ÷ Stunden, 2)
+      </div>
+      <h3 style="margin-top:12px">Work Package – Jahresstundensatz (gewichtet)</h3>
+      <div class="formula-box">
+        Stundensatz_Jahr = Σ(FTE_Rolle × Rate_Rolle) ÷ Σ(FTE)<br>
+        Inflation kum.   = (Jahr − 1) × Inflation_p.a.<br>
+        Rate inkl. Infl. = ROUND(Stundensatz_Jahr × (1 + Inflation_kum.), 2)
+      </div>
+      <h3 style="margin-top:12px">Work Package – Angebotswert</h3>
+      <div class="formula-box">
+        Mixed Rate   = AVERAGE(Rate_inkl_Infl aller Jahre)<br>
+        Angebotswert = Gesamtstunden × Mixed Rate<br>
+        Rabatt       = 1 − Angebotswert ÷ Eingereichter Betrag
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Datenverwaltung</div>
+    <p style="font-size:0.84rem;color:#4a5568;margin-bottom:14px">
+      Alle Eingaben werden automatisch im Browser-localStorage gespeichert. Die Daten bleiben erhalten, solange der Browser-Cache nicht geleert wird. Sie verlassen deinen Computer nicht.
+    </p>
+    <button class="reset-btn" onclick="resetAll()">Alle Daten zurücksetzen</button>
+    <p style="font-size:0.75rem;color:#9ca3af;margin-top:8px">Setzt alle Felder auf die Standardwerte zurück und löscht den gespeicherten Stand.</p>
+  </div>
+</div>
+
+<script>
+// ==========================================
+// Hilfsfunktionen
+// ==========================================
+function fmt(n, d = 2) {
+  if (n == null || isNaN(n) || !isFinite(n)) return '–';
+  return n.toLocaleString('de-DE', { minimumFractionDigits: d, maximumFractionDigits: d });
+}
+function fmtEur(n) { return (n == null || isNaN(n) || !isFinite(n)) ? '–' : fmt(n) + ' €'; }
+function v(id) { const el = document.getElementById(id); return el ? (parseFloat(el.value) || 0) : 0; }
+function setText(id, t) { const el = document.getElementById(id); if (el) el.textContent = t; }
+
+// ==========================================
+// localStorage
+// ==========================================
+const LS_KEY = 'ssk_v1';
+
+function saveState() {
+  try {
+    const state = { _tab: document.querySelector('.tab-content.active')?.id || 'hrs-calc' };
+    document.querySelectorAll('input[id], select[id]').forEach(el => { state[el.id] = el.value; });
+    state._wpFte = JSON.stringify(wpFteState);
+    localStorage.setItem(LS_KEY, JSON.stringify(state));
+  } catch(e) {}
+}
+
+function restoreState() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return {};
+    return JSON.parse(raw);
+  } catch(e) { return {}; }
+}
+
+function applyStaticFields(state) {
+  Object.entries(state).forEach(([id, val]) => {
+    if (id.startsWith('_')) return;
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  });
+}
+
+function resetAll() {
+  if (!confirm('Wirklich alle Daten zurücksetzen?')) return;
+  localStorage.removeItem(LS_KEY);
+  location.reload();
+}
+
+// Auto-save on any input/change
+document.addEventListener('input',  saveState);
+document.addEventListener('change', saveState);
+
+// ==========================================
+// Tab-Navigation
+// ==========================================
+function showTab(id, btn) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  saveState();
+}
+
+// ==========================================
+// TAB 1: hrs calc
+// ==========================================
+function calcHrs() {
+  const ar  = v('hc-ar') / 100;
+  const hrs = v('hc-hrs');
+  const result = 261 * ar * hrs;
+  setText('hc-result',     fmt(result) + ' h');
+  setText('hc-custom-val', fmt(result) + ' h');
+}
+
+// ==========================================
+// TAB 2: Salary → Bill Rate
+// ==========================================
+function calcSBR() {
+  const salary = v('sbr-salary');
+  const nwl    = v('sbr-nwl') / 100;
+  const oh     = v('sbr-overhead') / 100;
+  const cm     = v('sbr-cm') / 100;
+  const hours  = v('sbr-hours');
+  const s1 = salary * (1 + nwl);
+  const s2 = s1 * (1 + oh);
+  const s3 = s2 / (1 - cm);
+  const rate = Math.round(s3 / hours * 100) / 100;
+  setText('sbr-s0',     fmtEur(salary));
+  setText('sbr-s1',     fmtEur(s1));
+  setText('sbr-s2',     fmtEur(s2));
+  setText('sbr-s3',     fmtEur(s3));
+  setText('sbr-result', fmt(rate) + ' €/h');
+}
+
+// ==========================================
+// TAB 3: Salary → CM%
+// ==========================================
+function calcSCM() {
+  const salary   = v('scm-salary');
+  const nwl      = v('scm-nwl') / 100;
+  const oh       = v('scm-overhead') / 100;
+  const hours    = v('scm-hours');
+  const billrate = v('scm-billrate');
+  const s1       = salary * (1 + nwl);
+  const s2       = s1 * (1 + oh);
+  const costrate = Math.round(s2 / hours * 100) / 100;
+  const cm       = 1 - costrate / billrate;
+  setText('scm-s1',       fmtEur(s1));
+  setText('scm-s2',       fmtEur(s2));
+  setText('scm-costrate', fmt(costrate) + ' €/h');
+  setText('scm-result',   fmt(cm * 100, 1) + ' %');
+}
+
+// ==========================================
+// TAB 4: Bill Rate → Salary
+// ==========================================
+function calcBRS() {
+  const rateEur = v('brs-rate-eur');
+  const rateUsd = v('brs-rate-usd');
+  const nwl     = v('brs-nwl') / 100;
+  const cmMin   = v('brs-cm-min') / 100;
+  const cmMax   = v('brs-cm-max') / 100;
+  const hours   = v('brs-hours');
+  const cur     = document.getElementById('brs-currency').value;
+  const rate    = cur === 'USD' ? rateUsd : rateEur;
+  const minYear = rate * (1 - cmMax) / (1 + nwl) * hours;
+  const maxYear = rate * (1 - cmMin) / (1 + nwl) * hours;
+  setText('brs-year-min',  fmtEur(minYear));
+  setText('brs-month-min', fmtEur(minYear / 12));
+  setText('brs-year-max',  fmtEur(maxYear));
+  setText('brs-month-max', fmtEur(maxYear / 12));
+}
+
+// ==========================================
+// TAB 5: Work Package
+// ==========================================
+const WP_ROLES = [
+  { key: 'pl',  label: 'HCC Project Leader' },
+  { key: 'sp',  label: 'HCC Specialist'     },
+  { key: 'jr',  label: 'HCC Junior'         },
+  { key: 'bcc', label: 'BCC Romania', directRate: true },
+];
+
+const WP_FTE_DEFAULTS = {
+  pl:  [1,  1,  1,  1,  1,  1,  1,  1],
+  sp:  [3,  3,  3,  3,  3,  3,  3,  3],
+  jr:  [15, 15, 10, 8,  5,  5,  5,  0],
+  bcc: [5,  5,  10, 12, 15, 15, 15, 20],
+};
+
+let wpFteState = JSON.parse(JSON.stringify(WP_FTE_DEFAULTS));
+
+function rebuildWP() {
+  WP_ROLES.forEach(r => {
+    for (let y = 0; y < 20; y++) {
+      const el = document.getElementById(`wp-fte-${r.key}-${y}`);
+      if (el) { wpFteState[r.key] = wpFteState[r.key] || []; wpFteState[r.key][y] = parseFloat(el.value) || 0; }
+    }
+  });
+  buildWPTables();
+  calcWP();
+}
+
+function buildWPTables() {
+  const runtime   = parseInt(v('wp-runtime')) || 8;
+  const startYear = parseInt(document.getElementById('wp-startyear')?.value) || 2023;
+  const yearsArr  = Array.from({ length: runtime }, (_, i) => i);
+
+  // Roles table
+  const tbody = document.getElementById('wp-roles-body');
+  let html = '';
+  WP_ROLES.forEach(r => {
+    if (r.directRate) {
+      html += `<tr>
+        <td class="td-label">${r.label}</td>
+        <td colspan="4" style="color:#6b7280;font-style:italic;text-align:left;padding-left:12px">
+          Direkter Stundensatz:
+          <input type="number" id="wp-salary-${r.key}" value="27" min="0" step="0.01"
+            oninput="calcWP()" style="width:70px;background:#fffde7;border-color:#fbbf24;border-radius:4px;padding:4px 6px;font-size:0.82rem"> €/h
+        </td>
+        <td class="td-big" id="wp-rate-${r.key}">–</td>
+      </tr>`;
+    } else {
+      const defSalary = { pl: 65000, sp: 60000, jr: 50000 }[r.key] || 0;
+      html += `<tr>
+        <td class="td-label">${r.label}</td>
+        <td><input type="number" id="wp-salary-${r.key}" value="${defSalary}" min="0" oninput="calcWP()"
+          style="width:90px;background:#fffde7;border-color:#fbbf24;border-radius:4px;padding:4px 6px;font-size:0.82rem"></td>
+        <td class="td-result" id="wp-nwl-${r.key}">–</td>
+        <td class="td-result" id="wp-oh-${r.key}">–</td>
+        <td class="td-result" id="wp-full-${r.key}">–</td>
+        <td class="td-big"    id="wp-rate-${r.key}">–</td>
+      </tr>`;
+    }
+  });
+  tbody.innerHTML = html;
+
+  // FTE table
+  const fteTable = document.getElementById('wp-fte-table');
+  let thead = '<thead><tr><th class="th-left">Rolle</th>';
+  yearsArr.forEach(y => { thead += `<th>Jahr ${y+1}<br><small>${startYear+y}</small></th>`; });
+  thead += '</tr></thead>';
+  let tbody2 = '<tbody>';
+  WP_ROLES.forEach(r => {
+    tbody2 += `<tr><td class="td-label">${r.label}</td>`;
+    yearsArr.forEach(y => {
+      const def = (wpFteState[r.key] && wpFteState[r.key][y] != null)
+        ? wpFteState[r.key][y]
+        : (WP_FTE_DEFAULTS[r.key]?.[y] ?? 0);
+      tbody2 += `<td><input type="number" id="wp-fte-${r.key}-${y}" value="${def}" min="0" oninput="calcWP()"></td>`;
+    });
+    tbody2 += '</tr>';
+  });
+  tbody2 += '<tr><td class="td-label" style="font-weight:700">Gesamt FTE</td>';
+  yearsArr.forEach(y => { tbody2 += `<td class="td-total" id="wp-total-fte-${y}">–</td>`; });
+  tbody2 += '</tr><tr><td class="td-label" style="font-weight:700">Stundensatz (€/h)</td>';
+  yearsArr.forEach(y => { tbody2 += `<td class="td-result" id="wp-rate-year-${y}">–</td>`; });
+  tbody2 += '</tr><tr><td class="td-label">Inflation kum.</td>';
+  yearsArr.forEach(y => { tbody2 += `<td class="td-infl" id="wp-infl-${y}">–</td>`; });
+  tbody2 += '</tr><tr><td class="td-label" style="font-weight:700">Rate inkl. Inflation (€/h)</td>';
+  yearsArr.forEach(y => { tbody2 += `<td class="td-big" id="wp-rate-infl-${y}">–</td>`; });
+  tbody2 += '</tr></tbody>';
+  fteTable.innerHTML = thead + tbody2;
+
+  // Rounds table
+  const roundsTable = document.getElementById('wp-rounds-table');
+  let rHtml = `<thead><tr><th class="th-left">Runde</th><th>Einreichungsdatum</th><th>Eingereichter Betrag (€)</th><th>Rabatt auf Angebotswert</th></tr></thead><tbody>`;
+  for (let r = 1; r <= 4; r++) {
+    rHtml += `<tr>
+      <td class="td-label">Runde ${r}</td>
+      <td><input type="date" id="wp-round-date-${r}" style="width:138px;padding:4px 6px;font-size:0.80rem;border-radius:4px"></td>
+      <td><input type="number" class="bid-input" id="wp-round-bid-${r}" value="100000" min="0" oninput="calcWP()" style="padding:4px 6px;font-size:0.80rem;border-radius:4px"></td>
+      <td class="td-result" id="wp-round-disc-${r}">–</td>
+    </tr>`;
+  }
+  rHtml += '</tbody>';
+  roundsTable.innerHTML = rHtml;
+}
+
+function calcWP() {
+  const nwl      = v('wp-nwl') / 100;
+  const oh       = v('wp-overhead') / 100;
+  const cm       = v('wp-cm') / 100;
+  const hours    = v('wp-hours');
+  const inflation = v('wp-inflation') / 100;
+  const runtime  = parseInt(v('wp-runtime')) || 8;
+  const totalHrs = v('wp-total-hours');
+
+  const rates = {};
+  WP_ROLES.forEach(r => {
+    const salEl = document.getElementById(`wp-salary-${r.key}`);
+    if (!salEl) return;
+    const sal = parseFloat(salEl.value) || 0;
+    if (r.directRate) {
+      rates[r.key] = sal;
+      setText(`wp-rate-${r.key}`, fmt(sal) + ' €/h');
+    } else {
+      const nwlCost  = sal * (1 + nwl);
+      const ohCost   = nwlCost * (1 + oh);
+      const fullCost = ohCost / (1 - cm);
+      const rate     = Math.round(fullCost / hours * 100) / 100;
+      rates[r.key]   = rate;
+      setText(`wp-nwl-${r.key}`,  fmtEur(nwlCost));
+      setText(`wp-oh-${r.key}`,   fmtEur(ohCost));
+      setText(`wp-full-${r.key}`, fmtEur(fullCost));
+      setText(`wp-rate-${r.key}`, fmt(rate) + ' €/h');
+    }
+  });
+
+  const inflRates = [];
+  for (let y = 0; y < runtime; y++) {
+    let totalFTE = 0, wRate = 0;
+    WP_ROLES.forEach(r => {
+      const fteEl = document.getElementById(`wp-fte-${r.key}-${y}`);
+      const fte   = fteEl ? (parseFloat(fteEl.value) || 0) : 0;
+      totalFTE += fte;
+      wRate    += fte * (rates[r.key] || 0);
+    });
+    const avgRate  = totalFTE > 0 ? wRate / totalFTE : 0;
+    const inflCum  = y === 0 ? 0 : y * inflation;
+    const rateInfl = Math.round(avgRate * (1 + inflCum) * 100) / 100;
+    inflRates.push(rateInfl);
+    setText(`wp-total-fte-${y}`, String(totalFTE));
+    setText(`wp-rate-year-${y}`, fmt(avgRate) + ' €/h');
+    setText(`wp-infl-${y}`,      fmt(inflCum * 100, 1) + ' %');
+    setText(`wp-rate-infl-${y}`, fmt(rateInfl) + ' €/h');
+  }
+
+  const mixed    = inflRates.reduce((a, b) => a + b, 0) / runtime;
+  const offerVal = totalHrs * mixed;
+  setText('wp-mixed-rate',  fmt(mixed) + ' €/h');
+  setText('wp-offer-value', fmtEur(offerVal));
+
+  for (let r = 1; r <= 4; r++) {
+    const bidEl = document.getElementById(`wp-round-bid-${r}`);
+    const bid   = bidEl ? (parseFloat(bidEl.value) || 0) : 0;
+    const disc  = (bid > 0 && offerVal > 0) ? (1 - offerVal / bid) : NaN;
+    setText(`wp-round-disc-${r}`, isNaN(disc) ? '–' : fmt(disc * 100, 1) + ' %');
+  }
+}
+
+// ==========================================
+// Init – State wiederherstellen
+// ==========================================
+(function init() {
+  const state = restoreState();
+
+  // 1. FTE-State aus localStorage laden (vor buildWPTables)
+  if (state._wpFte) {
+    try { wpFteState = JSON.parse(state._wpFte); } catch(e) {}
+  }
+
+  // 2. Statische Felder wiederherstellen (inkl. wp-runtime, wp-startyear)
+  applyStaticFields(state);
+
+  // 3. Dynamische Tabellen aufbauen (nutzt wpFteState + wp-runtime/startyear)
+  buildWPTables();
+
+  // 4. Dynamische Felder (Rounds etc.) nochmals setzen, da buildWPTables neu rendert
+  applyStaticFields(state);
+
+  // 5. Alle Berechnungen ausführen
+  calcHrs(); calcSBR(); calcSCM(); calcBRS(); calcWP();
+
+  // 6. Letzten aktiven Tab wiederherstellen
+  if (state._tab) {
+    const tabBtn = document.querySelector(`.tab-btn[onclick*="'${state._tab}'"]`);
+    if (tabBtn) showTab(state._tab, tabBtn);
+  }
+})();
+</script>
+</body>
+</html>
