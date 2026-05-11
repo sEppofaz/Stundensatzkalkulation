@@ -19,6 +19,13 @@ git push
 ```
 → GitHub Pages deployed automatisch. Alle Nutzer sehen die neue Version beim nächsten Öffnen der URL.
 
+## PWA / Homescreen-Icon
+
+- `manifest.json`: short_name „hrs calc", theme_color `#1e40af`, display standalone
+- Icons: `icon-192.png`, `icon-512.png`, `apple-touch-icon.png` (180px), `favicon.png` (32px)
+- Generiert mit Pillow (Python) – Blau-Gradient, €/h-Symbol, abgerundete Ecken
+- Bei Icon-Änderung: Python-Script neu ausführen, alle 4 PNGs mit committen
+
 ## Reiter & Berechnungslogik
 
 | Reiter | Eingaben (gelb) | Ergebnis (grün) | Kernformel |
@@ -51,6 +58,13 @@ git push
 | Stunden/Jahr (35h) | 1.407 h | 261 Arbeitstage × 7 h × ~77 % |
 | CM% Ziel | 25–30 % | projektüblich |
 | Inflation p.a. | 2,5 % | Work Package Default |
+
+## PDF-Export
+
+- **Button:** „⬇ PDF" ganz rechts in der Tab-Leiste (neben ℹ️ Info)
+- **Funktion:** `window.print()` – öffnet Browser-Print-Dialog → „Als PDF speichern"
+- **Print-CSS (`@media print`):** Tab-Leiste + PDF-Button ausgeblendet; nur aktiver Tab sichtbar; Hintergrundfarben erhalten (`print-color-adjust: exact`); Schatten entfernt
+- **Keine externe Bibliothek** – rein browser-nativ
 
 ## Work Package – Besonderheiten
 
